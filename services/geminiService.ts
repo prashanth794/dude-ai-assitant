@@ -171,3 +171,32 @@ export async function generateTitleForChat(prompt: string): Promise<string> {
     return "New Chat"; // Fallback title
   }
 }
+
+export async function generateAvatar(): Promise<string> {
+    if (!ai) {
+        throw new Error("API not initialized.");
+    }
+    try {
+        const prompt = "A friendly and helpful AI assistant robot, cartoon mascot style, head and shoulders, on a simple, clean background, vibrant colors.";
+        const response = await ai.models.generateImages({
+            model: 'imagen-4.0-generate-001',
+            prompt: prompt,
+            config: {
+              numberOfImages: 1,
+              outputMimeType: 'image/png',
+              aspectRatio: '1:1',
+            },
+        });
+
+        if (!response.generatedImages || response.generatedImages.length === 0) {
+            throw new Error("No image was generated.");
+        }
+
+        const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
+        return `data:image/png;base64,${base64ImageBytes}`;
+
+    } catch (error) {
+        console.error("Error generating avatar:", error);
+        throw new Error("Failed to generate a new avatar from the AI.");
+    }
+}

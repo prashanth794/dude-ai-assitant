@@ -5,7 +5,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import { ChatMessage, Conversation, Attachment, Source } from './types';
-import { initializeApi, sendMessageToDudeStream, generateTitleForChat } from './services/geminiService';
+import { initializeApi, sendMessageToDudeStream, generateTitleForChat, generateAvatar } from './services/geminiService';
 import Header from './components/Header';
 import ChatWindow from './components/ChatWindow';
 import MessageInput from './components/MessageInput';
@@ -37,6 +37,8 @@ const theme = createTheme({
 
 const CONVERSATIONS_KEY = 'dude-conversations';
 const CHAT_HISTORY_KEY = 'dude-chat-history'; // Old key for migration
+const AVATAR_KEY = 'dude-avatar-url';
+
 
 const createNewConversation = (): Conversation => {
   const initialMessage: ChatMessage = {
@@ -60,10 +62,20 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isApiInitialized, setIsApiInitialized] = useState<boolean>(false);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  const [avatarUrl, setAvatarUrl] = useState<string>('/icon.svg');
+  const [isGeneratingAvatar, setIsGeneratingAvatar] = useState<boolean>(false);
+
 
   useEffect(() => {
     const initialized = initializeApi();
     setIsApiInitialized(initialized);
+
+    // Load avatar from local storage
+    const savedAvatar = localStorage.getItem(AVATAR_KEY);
+    if (savedAvatar) {
+      setAvatarUrl(savedAvatar);
+    }
+
 
     if (initialized) {
       try {
@@ -196,6 +208,23 @@ const App: React.FC = () => {
     }
   }, [conversations, activeConversationId]);
 
+  const handleGenerateAvatar = async () => {
+    if (isGeneratingAvatar || !isApiInitialized) return;
+    setIsGeneratingAvatar(true);
+    setError(null);
+    try {
+        const newAvatarDataUrl = await generateAvatar();
+        setAvatarUrl(newAvatarDataUrl);
+        localStorage.setItem(AVATAR_KEY, newAvatarDataUrl);
+        setDrawerOpen(false); // Close drawer on success
+    } catch (e: any) {
+        console.error("Failed to generate avatar", e);
+        setError(e.message || "Could not generate a new avatar right now.");
+    } finally {
+        setIsGeneratingAvatar(false);
+    }
+  };
+
 
   const handleSendMessage = useCallback(async (inputText: string, attachments?: Attachment[]) => {
     if (isLoading || (!inputText.trim() && !attachments?.length) || !isApiInitialized || !activeConversationId) return;
@@ -303,11 +332,14 @@ const App: React.FC = () => {
           onDeleteConversation={handleDeleteConversation}
           onRenameConversation={handleRenameConversation}
           onClearOldConversations={handleClearOldConversations}
+          onGenerateAvatar={handleGenerateAvatar}
+          isGeneratingAvatar={isGeneratingAvatar}
         />
         <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, height: '100vh', overflow: 'hidden' }}>
           <Header
             onMenuClick={() => setDrawerOpen(true)}
             title={activeConversation?.title || 'New Chat'}
+            avatarUrl={avatarUrl}
           />
           <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
              <ChatWindow

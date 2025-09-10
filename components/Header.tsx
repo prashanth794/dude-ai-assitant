@@ -10,9 +10,10 @@ import Avatar from '@mui/material/Avatar';
 interface HeaderProps {
   onMenuClick: () => void;
   title: string;
+  avatarUrl: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ onMenuClick, title }) => {
+const Header: React.FC<HeaderProps> = ({ onMenuClick, title, avatarUrl }) => {
   return (
     <AppBar position="static" color="inherit" elevation={1}>
       <Toolbar>
@@ -27,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, title }) => {
         </IconButton>
         <Avatar 
             alt="Dude AI Assistant" 
-            src="/icon.svg" 
+            src={avatarUrl} 
             sx={{ mr: 2, bgcolor: 'primary.main' }}
         />
         <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>

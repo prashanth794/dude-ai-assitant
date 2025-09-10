@@ -16,11 +16,13 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import CircularProgress from '@mui/material/CircularProgress';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddCommentIcon from '@mui/icons-material/AddComment';
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { Conversation } from '../types';
 
 interface ConversationDrawerProps {
@@ -33,6 +35,8 @@ interface ConversationDrawerProps {
   onDeleteConversation: (id: string) => void;
   onRenameConversation: (id: string, newTitle: string) => void;
   onClearOldConversations: () => void;
+  onGenerateAvatar: () => void;
+  isGeneratingAvatar: boolean;
 }
 
 const CONVERSATIONS_PAGE_SIZE = 25;
@@ -47,6 +51,8 @@ const ConversationDrawer: React.FC<ConversationDrawerProps> = ({
   onDeleteConversation,
   onRenameConversation,
   onClearOldConversations,
+  onGenerateAvatar,
+  isGeneratingAvatar,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [visibleCount, setVisibleCount] = useState(CONVERSATIONS_PAGE_SIZE);
@@ -180,6 +186,17 @@ const ConversationDrawer: React.FC<ConversationDrawerProps> = ({
           </Button>
       </Box>
       <Divider />
+       <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Button
+            variant="contained"
+            startIcon={isGeneratingAvatar ? <CircularProgress size={20} color="inherit" /> : <AutoAwesomeIcon />}
+            onClick={onGenerateAvatar}
+            disabled={isGeneratingAvatar}
+            fullWidth
+          >
+            {isGeneratingAvatar ? 'Generating...' : 'Generate New Avatar'}
+          </Button>
+      </Box>
       <List sx={{ flexGrow: 1, overflowY: 'auto' }}>
         {conversationsToShow.map((convo) => (
           <ListItem key={convo.id} disablePadding secondaryAction={

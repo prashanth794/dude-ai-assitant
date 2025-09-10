@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dude AI Assistant</title>
+
+    <!-- PWA additions -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#7e57c2" />
+    <link rel="apple-touch-icon" href="icon.svg" />
+    <!-- End PWA additions -->
+
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+    />
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react/": "https://esm.sh/react@18.2.0/",
+    "react-dom": "https://esm.sh/react-dom@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "react-dom/": "https://esm.sh/react-dom@18.2.0/",
+    "@google/genai": "https://esm.sh/@google/genai@0.14.0",
+    "react-markdown": "https://esm.sh/react-markdown@9.0.1?external=react",
+    "remark-gfm": "https://esm.sh/remark-gfm@4.0.0",
+    "react-syntax-highlighter": "https://esm.sh/react-syntax-highlighter@15.5.0?external=react",
+    "react-syntax-highlighter/dist/esm/styles/prism": "https://esm.sh/react-syntax-highlighter@15.5.0/dist/esm/styles/prism",
+    "react-syntax-highlighter/dist/esm/styles/prism/one-dark": "https://esm.sh/react-syntax-highlighter@15.5.0/dist/esm/styles/prism/one-dark",
+    "@mui/material/styles": "https://esm.sh/@mui/material@5.15.20/styles?external=react,react-dom",
+    "@mui/material/CssBaseline": "https://esm.sh/@mui/material@5.15.20/CssBaseline?external=react,react-dom",
+    "@mui/material/Container": "https://esm.sh/@mui/material@5.15.20/Container?external=react,react-dom",
+    "@mui/material/Box": "https://esm.sh/@mui/material@5.15.20/Box?external=react,react-dom",
+    "@mui/material/AppBar": "https://esm.sh/@mui/material@5.15.20/AppBar?external=react,react-dom",
+    "@mui/material/Toolbar": "https://esm.sh/@mui/material@5.15.20/Toolbar?external=react,react-dom",
+    "@mui/material/Avatar": "https://esm.sh/@mui/material@5.15.20/Avatar?external=react,react-dom",
+    "@mui/material/Typography": "https://esm.sh/@mui/material@5.15.20/Typography?external=react,react-dom",
+    "@mui/material/Paper": "https://esm.sh/@mui/material@5.15.20/Paper?external=react,react-dom",
+    "@mui/material/FormControl": "https://esm.sh/@mui/material@5.15.20/FormControl?external=react,react-dom",
+    "@mui/material/OutlinedInput": "https://esm.sh/@mui/material@5.15.20/OutlinedInput?external=react,react-dom",
+    "@mui/material/IconButton": "https://esm.sh/@mui/material@5.15.20/IconButton?external=react,react-dom",
+    "@mui/material/Link": "https://esm.sh/@mui/material@5.15.20/Link?external=react,react-dom",
+    "@mui/material/Menu": "https://esm.sh/@mui/material@5.15.20/Menu?external=react,react-dom",
+    "@mui/material/MenuItem": "https://esm.sh/@mui/material@5.15.20/MenuItem?external=react,react-dom",
+    "@mui/material/Drawer": "https://esm.sh/@mui/material@5.15.20/Drawer?external=react,react-dom",
+    "@mui/material/List": "https://esm.sh/@mui/material@5.15.20/List?external=react,react-dom",
+    "@mui/material/ListItem": "https://esm.sh/@mui/material@5.15.20/ListItem?external=react,react-dom",
+    "@mui/material/ListItemButton": "https://esm.sh/@mui/material@5.15.20/ListItemButton?external=react,react-dom",
+    "@mui/material/ListItemText": "https://esm.sh/@mui/material@5.15.20/ListItemText?external=react,react-dom",
+    "@mui/material/Divider": "https://esm.sh/@mui/material@5.15.20/Divider?external=react,react-dom",
+    "@mui/material/Button": "https://esm.sh/@mui/material@5.15.20/Button?external=react,react-dom",
+    "@mui/material/Dialog": "https://esm.sh/@mui/material@5.15.20/Dialog?external=react,react-dom",
+    "@mui/material/DialogActions": "https://esm.sh/@mui/material@5.15.20/DialogActions?external=react,react-dom",
+    "@mui/material/DialogContent": "https://esm.sh/@mui/material@5.15.20/DialogContent?external=react,react-dom",
+    "@mui/material/DialogContentText": "https://esm.sh/@mui/material@5.15.20/DialogContentText?external=react,react-dom",
+    "@mui/material/DialogTitle": "https://esm.sh/@mui/material@5.15.20/DialogTitle?external=react,react-dom",
+    "@mui/material/TextField": "https://esm.sh/@mui/material@5.15.20/TextField?external=react,react-dom",
+    "@mui/material/InputAdornment": "https://esm.sh/@mui/material@5.15.20/InputAdornment?external=react,react-dom",
+    "@mui/material/Tooltip": "https://esm.sh/@mui/material@5.15.20/Tooltip?external=react,react-dom",
+    "@mui/icons-material/Send": "https://esm.sh/@mui/icons-material@5.15.20/Send?external=react,react-dom",
+    "@mui/icons-material/MoreVert": "https://esm.sh/@mui/icons-material@5.15.20/MoreVert?external=react,react-dom",
+    "@mui/icons-material/Menu": "https://esm.sh/@mui/icons-material@5.15.20/Menu?external=react,react-dom",
+    "@mui/icons-material/Delete": "https://esm.sh/@mui/icons-material@5.15.20/Delete?external=react,react-dom",
+    "@mui/icons-material/AddComment": "https://esm.sh/@mui/icons-material@5.15.20/AddComment?external=react,react-dom",
+    "@mui/icons-material/Edit": "https://esm.sh/@mui/icons-material@5.15.20/Edit?external=react,react-dom",
+    "@mui/icons-material/Search": "https://esm.sh/@mui/icons-material@5.15.20/Search?external=react,react-dom",
+    "@mui/icons-material/AttachFile": "https://esm.sh/@mui/icons-material@5.15.20/AttachFile?external=react,react-dom",
+    "@mui/icons-material/Close": "https://esm.sh/@mui/icons-material@5.15.20/Close?external=react,react-dom",
+    "@mui/icons-material/DeleteSweep": "https://esm.sh/@mui/icons-material@5.15.20/DeleteSweep?external=react,react-dom",
+    "@mui/icons-material/ContentCopy": "https://esm.sh/@mui/icons-material@5.15.20/ContentCopy?external=react,react-dom",
+    "@mui/icons-material/Check": "https://esm.sh/@mui/icons-material@5.15.20/Check?external=react,react-dom",
+    "@emotion/react": "https://esm.sh/@emotion/react@11.11.4?external=react",
+    "@emotion/styled": "https://esm.sh/@emotion/styled@11.11.5?external=react,@emotion/react",
+    "@mui/material/": "https://aistudiocdn.com/@mui/material@^7.3.2/",
+    "@mui/icons-material/": "https://aistudiocdn.com/@mui/icons-material@^7.3.2/",
+    "react-syntax-highlighter/": "https://aistudiocdn.com/react-syntax-highlighter@^15.6.6/"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+
+    <!-- PWA: Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            })
+            .catch(error => {
+              console.log('ServiceWorker registration failed: ', error);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>

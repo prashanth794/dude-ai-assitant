@@ -1,5 +1,10 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="512" height="512" rx="128" fill="#7E57C2"/>
-<path d="M160 128C160 110.327 174.327 96 192 96H288C369.839 96 432 158.161 432 240V272C432 353.839 369.839 416 288 416H192C174.327 416 160 401.673 160 384V128Z" fill="white" fill-opacity="0.1"/>
-<path d="M192 128H288C352.418 128 400 175.582 400 240V272C400 336.418 352.418 384 288 384H192V128Z" fill="#F4F6F8"/>
+    <defs>
+        <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#9575CD"/>
+            <stop offset="100%" stop-color="#673AB7"/>
+        </linearGradient>
+    </defs>
+    <rect width="512" height="512" rx="128" fill="url(#grad)"/>
+    <path d="M224 128 L 224 336 L 160 384 L 224 384 H 304 C 385 384 432 329 432 256 C 432 183 385 128 304 128 H 224 Z" fill="#F4F6F8"/>
 </svg>

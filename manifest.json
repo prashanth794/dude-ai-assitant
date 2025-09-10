@@ -4,9 +4,16 @@
   "description": "An AI agent chatbot named Dude, designed to be a personal productivity and wellness assistant for Asha. It helps with summarization, brainstorming, and learning, all while maintaining an encouraging and action-oriented personality.",
   "icons": [
     {
-      "src": "icon.svg",
+      "src": "/icon.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/maskable-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ],
   "start_url": ".",

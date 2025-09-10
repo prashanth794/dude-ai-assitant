@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dude-ai-cache-v4';
+const CACHE_NAME = 'dude-ai-cache-v6';
 // This list includes all the crucial files for the app shell and its dependencies.
 const URLS_TO_CACHE = [
   '/',

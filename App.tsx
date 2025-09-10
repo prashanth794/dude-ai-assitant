@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
-import { ChatMessage, Conversation, Attachment } from './types';
+import { ChatMessage, Conversation, Attachment, Source } from './types';
 import { initializeApi, sendMessageToDudeStream, generateTitleForChat } from './services/geminiService';
 import Header from './components/Header';
 import ChatWindow from './components/ChatWindow';
@@ -208,73 +209,91 @@ const App: React.FC = () => {
       sender: 'user',
       attachments,
     };
-    
-    const historyForApi = [...activeConvo.messages];
-    
-    const updatedConvoWithUserMsg = { ...activeConvo, messages: [...activeConvo.messages, userMessage] };
-    setConversations(conversations.map(c => c.id === activeConversationId ? updatedConvoWithUserMsg : c));
+
     setIsLoading(true);
     setError(null);
-
+    
+    // Immediately add user message and a placeholder for the AI response
     const aiMessageId = (Date.now() + 1).toString();
+    const placeholderAiMessage: ChatMessage = { id: aiMessageId, text: '', sender: 'ai' };
+    const updatedMessages = [...activeConvo.messages, userMessage, placeholderAiMessage];
+    setConversations(conversations.map(c => 
+      c.id === activeConversationId ? { ...c, messages: updatedMessages } : c
+    ));
+    
+    // Generate title in the background without blocking the chat response
+    if (activeConvo.messages.length === 1) {
+      const titlePrompt = inputText || "Image Analysis";
+      generateTitleForChat(titlePrompt).then(title => {
+        setConversations(prev => prev.map(c => 
+          c.id === activeConversationId ? { ...c, title } : c
+        ));
+      });
+    }
 
+    // FIX: The file was truncated here. The line is completed and the rest of the function is added.
+    const historyForApi = activeConvo.messages;
+    
     try {
-      if (activeConvo.messages.length === 1) {
-        const titlePrompt = inputText || "Image Analysis";
-        const title = await generateTitleForChat(titlePrompt);
-        setConversations(prev => prev.map(c => c.id === activeConversationId ? { ...c, title } : c));
-      }
-
-      const placeholderAiMessage: ChatMessage = { id: aiMessageId, text: '', sender: 'ai' };
-      setConversations(prev => prev.map(c => c.id === activeConversationId ? { ...c, messages: [...c.messages, placeholderAiMessage] } : c));
-
       const stream = sendMessageToDudeStream(inputText, historyForApi, attachments);
-
+      
+      let fullResponseText = '';
+      
       for await (const chunk of stream) {
-        setConversations(prev => {
-          return prev.map(c => {
-            if (c.id === activeConversationId) {
-              const lastMessage = c.messages[c.messages.length - 1];
-              if (lastMessage && lastMessage.id === aiMessageId) {
-                const updatedMessage = { ...lastMessage };
-                if (chunk.text) {
-                  updatedMessage.text += chunk.text;
-                }
-                if (chunk.sources) {
-                  updatedMessage.sources = [...(updatedMessage.sources || []), ...chunk.sources];
-                }
-                return { ...c, messages: [...c.messages.slice(0, -1), updatedMessage] };
+        if (chunk.text) {
+          fullResponseText += chunk.text;
+          setConversations(prev => {
+            return prev.map(c => {
+              if (c.id === activeConversationId) {
+                const newMessages = c.messages.map(m => 
+                  m.id === aiMessageId ? { ...m, text: fullResponseText } : m
+                );
+                return { ...c, messages: newMessages };
               }
+              return c;
+            });
+          });
+        }
+        
+        if (chunk.sources && chunk.sources.length > 0) {
+           setConversations(prev => {
+            return prev.map(c => {
+              if (c.id === activeConversationId) {
+                const newMessages = c.messages.map(m => 
+                  m.id === aiMessageId ? { ...m, sources: chunk.sources } : m
+                );
+                return { ...c, messages: newMessages };
+              }
+              return c;
+            });
+          });
+        }
+      }
+    } catch (e: any) {
+        console.error("Failed to send message", e);
+        const errorMessage = e.message || "Apologies, I've hit a snag. Could you try that again?";
+        setError(errorMessage);
+        setConversations(prev => prev.map(c => {
+            if (c.id === activeConversationId) {
+                return {
+                    ...c,
+                    messages: c.messages.map(m => m.id === aiMessageId ? { ...m, text: errorMessage } : m)
+                };
             }
             return c;
-          });
-        });
-      }
-    } catch (err) {
-      const errorMessage = 'Sorry, mate. My brain just did a backflip. Could you try that again?';
-      setError(errorMessage);
-       setConversations(prev => prev.map(c => {
-         if (c.id === activeConversationId) {
-            const lastMessage = c.messages[c.messages.length - 1];
-            if (lastMessage && lastMessage.id === aiMessageId) {
-                const errorMsg = { ...lastMessage, text: errorMessage };
-                return { ...c, messages: [...c.messages.slice(0,-1), errorMsg]};
-            }
-         }
-         return c;
-       }));
+        }));
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, isApiInitialized, conversations, activeConversationId]);
+  }, [isLoading, isApiInitialized, activeConversationId, conversations]);
 
   const activeConversation = conversations.find(c => c.id === activeConversationId);
-  const messages = activeConversation?.messages || [];
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-       <ConversationDrawer 
+      <Box sx={{ display: 'flex', height: '100vh', flexDirection: 'row' }}>
+        <ConversationDrawer
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           conversations={conversations}
@@ -285,26 +304,26 @@ const App: React.FC = () => {
           onRenameConversation={handleRenameConversation}
           onClearOldConversations={handleClearOldConversations}
         />
-      <Container maxWidth="sm" sx={{ p: 0 }}>
-        <Box
-          sx={{
-            height: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-            bgcolor: 'background.default',
-            boxShadow: { sm: 3 },
-          }}
-        >
-          <Header onMenuClick={() => setDrawerOpen(true)} title={activeConversation?.title || 'Dude'}/>
-          <ChatWindow messages={messages} isLoading={isLoading} />
-          <MessageInput 
-            onSendMessage={handleSendMessage} 
-            isLoading={isLoading} 
+        <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, height: '100vh', overflow: 'hidden' }}>
+          <Header
+            onMenuClick={() => setDrawerOpen(true)}
+            title={activeConversation?.title || 'New Chat'}
+          />
+          <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+             <ChatWindow
+              messages={activeConversation?.messages ?? []}
+              isLoading={isLoading}
+            />
+          </Box>
+          {error && <Box sx={{ p: 2, bgcolor: 'error.main', color: 'white' }}>{error}</Box>}
+          <MessageInput
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
             isChatInitialized={isApiInitialized}
             activeConversationId={activeConversationId}
           />
         </Box>
-      </Container>
+      </Box>
     </ThemeProvider>
   );
 };

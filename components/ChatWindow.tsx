@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import { ChatMessage } from '../types';
@@ -18,7 +19,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, isLoading }) => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
   
-  const showLoading = isLoading && messages.length > 0 && messages[messages.length - 1].sender === 'user';
+  // FIX: The original condition `messages[messages.length - 1].sender === 'user'`
+  // was incorrect when using a placeholder AI message.
+  // We should show the loading indicator whenever the app is waiting for a response.
+  const showLoading = isLoading;
 
   return (
     <Box

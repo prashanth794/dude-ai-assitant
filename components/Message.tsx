@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -41,6 +42,12 @@ const slideInFromLeft = keyframes`
 
 const Message: React.FC<MessageProps> = ({ message }) => {
   const isUser = message.sender === 'user';
+
+  // FIX: Do not render empty AI messages. This prevents showing an empty bubble
+  // while the loading indicator is active, creating a cleaner UI.
+  if (message.sender === 'ai' && !message.text.trim() && (!message.attachments || message.attachments.length === 0)) {
+    return null;
+  }
 
   const markdownComponents = {
     // Use MUI Typography for consistent text styling

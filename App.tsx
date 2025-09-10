@@ -62,7 +62,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isApiInitialized, setIsApiInitialized] = useState<boolean>(false);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
-  const [avatarUrl, setAvatarUrl] = useState<string>('/icon.svg');
+  const [avatarUrl, setAvatarUrl] = useState<string>('/icon-192.png');
   const [isGeneratingAvatar, setIsGeneratingAvatar] = useState<boolean>(false);
 
 

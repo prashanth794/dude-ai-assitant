@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dude-ai-cache-v9';
+const CACHE_NAME = 'dude-ai-cache-v10';
 // This list includes all the crucial files for the app shell and its dependencies.
 const URLS_TO_CACHE = [
   '/',
@@ -14,7 +14,6 @@ const URLS_TO_CACHE = [
   '/components/LoadingIndicator.tsx',
   '/components/ConversationDrawer.tsx',
   '/components/CodeCopyButton.tsx',
-  '/maskable-icon.svg',
   '/icon-192.png',
   '/icon-512.png',
   'https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap',

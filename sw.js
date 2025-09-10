@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dude-ai-cache-v13';
+const CACHE_NAME = 'dude-ai-cache-v14';
 // This list includes all the crucial files for the app shell and its dependencies.
 const URLS_TO_CACHE = [
   '/',
@@ -74,9 +74,9 @@ self.addEventListener('install', event => {
       .then(cache => {
         console.log('Opened cache');
         // Using cache.addAll to ensure all assets are cached atomically.
-        // If any asset fails to fetch, the service worker installation will fail.
         return cache.addAll(URLS_TO_CACHE);
       })
+      .then(() => self.skipWaiting()) // Force the waiting service worker to become the active service worker.
   );
 });
 
@@ -92,7 +92,7 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim()) // Take control of all open clients.
   );
 });
 

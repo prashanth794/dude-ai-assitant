@@ -8,9 +8,10 @@ import LoadingIndicator from './LoadingIndicator';
 interface ChatWindowProps {
   messages: ChatMessage[];
   isLoading: boolean;
+  speakingMessageId: string | null;
 }
 
-const ChatWindow: React.FC<ChatWindowProps> = ({ messages, isLoading }) => {
+const ChatWindow: React.FC<ChatWindowProps> = ({ messages, isLoading, speakingMessageId }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -37,7 +38,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, isLoading }) => {
       }}
     >
       {messages.map((msg) => (
-        <Message key={msg.id} message={msg} />
+        <Message key={msg.id} message={msg} isSpeaking={msg.id === speakingMessageId} />
       ))}
       {showLoading && <LoadingIndicator />}
       {/* This empty div is the target for our smooth scroll */}

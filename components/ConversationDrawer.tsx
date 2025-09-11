@@ -17,12 +17,14 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import CircularProgress from '@mui/material/CircularProgress';
+import Tooltip from '@mui/material/Tooltip';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddCommentIcon from '@mui/icons-material/AddComment';
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { Conversation } from '../types';
 
 interface ConversationDrawerProps {
@@ -34,6 +36,7 @@ interface ConversationDrawerProps {
   onSelectConversation: (id: string) => void;
   onDeleteConversation: (id: string) => void;
   onRenameConversation: (id: string, newTitle: string) => void;
+  onExportConversation: (id: string) => void;
   onClearOldConversations: () => void;
   onGenerateAvatar: () => void;
   isGeneratingAvatar: boolean;
@@ -50,6 +53,7 @@ const ConversationDrawer: React.FC<ConversationDrawerProps> = ({
   onSelectConversation,
   onDeleteConversation,
   onRenameConversation,
+  onExportConversation,
   onClearOldConversations,
   onGenerateAvatar,
   isGeneratingAvatar,
@@ -138,6 +142,11 @@ const ConversationDrawer: React.FC<ConversationDrawerProps> = ({
     }
   };
 
+  const handleExport = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    onExportConversation(id);
+  };
+
   const filteredConversations = conversations
     .filter(convo => convo.title.toLowerCase().includes(searchTerm.toLowerCase()))
     .sort((a, b) => b.createdAt - a.createdAt);
@@ -202,12 +211,21 @@ const ConversationDrawer: React.FC<ConversationDrawerProps> = ({
           <ListItem key={convo.id} disablePadding secondaryAction={
             editingConvoId !== convo.id ? (
               <Box>
-                <IconButton edge="end" aria-label="rename conversation" onClick={(e) => handleStartEditing(e, convo)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton edge="end" aria-label="delete conversation" onClick={(e) => handleOpenDeleteDialog(e, convo)}>
-                  <DeleteIcon />
-                </IconButton>
+                <Tooltip title="Export chat">
+                  <IconButton edge="end" aria-label="export conversation" onClick={(e) => handleExport(e, convo.id)}>
+                    <FileDownloadIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Rename chat">
+                  <IconButton edge="end" aria-label="rename conversation" onClick={(e) => handleStartEditing(e, convo)}>
+                    <EditIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Delete chat">
+                  <IconButton edge="end" aria-label="delete conversation" onClick={(e) => handleOpenDeleteDialog(e, convo)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </Tooltip>
               </Box>
             ) : null
           }>

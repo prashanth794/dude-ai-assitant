@@ -1,5 +1,7 @@
 {
   "name": "Dude: Your Personal AI Assistant",
-  "description": "An AI agent chatbot named Dude, designed to be a personal productivity and wellness assistant for Asha. It helps with summarization, brainstorming, and learning, all while maintaining an encouraging and action-oriented personality.",
-  "requestFramePermissions": []
+  "description": "An installable AI agent chatbot (PWA) named Dude, designed to be a personal productivity and wellness assistant for Asha. It helps with summarization, brainstorming, and learning, all while maintaining an encouraging and action-oriented personality and offering offline access.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
 }

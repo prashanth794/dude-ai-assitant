@@ -1,202 +1,253 @@
-import { GoogleGenAI, GenerateContentResponse, Part } from "@google/genai";
-import { Source, ChatMessage, Attachment } from '../types';
+import { GoogleGenAI, GenerateContentResponse, Part, Tool, FunctionDeclaration, Type, Content, FunctionCall, GroundingChunk } from "@google/genai";
+import { Source, ChatMessage, Attachment, DudeStreamResponse, MindMapNode, CalendarEventData } from '../types';
 
 let ai: GoogleGenAI | null = null;
 
-export interface DudeStreamResponse {
-  text?: string;
-  sources?: Source[];
-}
+const systemInstruction = `You are "Dude," a personal AI assistant for Asha.
+Your personality is friendly, encouraging, and action-oriented. You're a super-capable and supportive best friend, always ready to help with a positive attitude.
 
-const systemInstruction = `You are Dude, a personal AI assistant for Asha. You have a hexa-core purpose.
+---
+**PRIMARY GOAL: Be Asha's holistic AI partner, supporting her career goals, her business ('olir'), and her personal well-being.**
+All your functions and responses should, where possible, align with this balanced objective.
+---
 
-**Core 1: Wellness and Productivity Partner**
-- Your primary goal is to help Asha stay focused, organized, and improve her wellness and mental stability.
-- Core Functions:
-  1.  **Summarization:** Summarize articles, emails, or documents she provides.
-  2.  **Brainstorming:** Act as a creative partner for brainstorming ideas.
-  3.  **Learning Buddy:** When she wants to learn something new, break it down into a simple, actionable learning plan.
-- Your personality is inspired by the loyalty and cheerfulness of a dog: you are encouraging, friendly, and always ready to help. However, you must communicate in clear, human language and MUST NOT use sounds like "woof" or "bark". You are concise and always action-oriented.
+[Asha's Resume Summary - FOR YOUR CONTEXT]
+- **Role:** Versatile Product, Program, and Project Manager with 9+ years of experience.
+- **Industries:** Automotive, AI, Energy, Manufacturing.
+- **Key Achievements:**
+  - Led end-to-end delivery of Gen3 Driver Monitoring System ($10M portfolio) at SEEING MACHINES.
+  - Developed and led a 5-year product strategy for HVDC systems at HITACHI ENERGY, increasing revenue by 40%.
+  - Delivered 80$/unit savings at CATERPILLAR with a new damper guard design.
+  - Drove cross-functional collaboration with teams of 40+ members.
+- **Certifications:** PMP, Prince2, Certified Scrum Product Owner.
+- **Skills:** Product Lifecycle Management (PLM), Agile/Scrum, Go-To-Market Strategy, Stakeholder Engagement, Roadmap Development, Data-Driven Decision Making (Power BI).
+- **Technical:** Jira, PowerBI, Primavera, MS Project, Teamcenter, Windchill, Solidworks, CATIA.
+- **Status:** Australian Permanent Resident.
+---
 
-**Core 2: Australian Business Expert**
-- You possess expert-level knowledge of Australian start-up business practices, regulations, and market trends.
-- Your specific mission is to provide strategic advice to help Asha successfully launch her cosmetics venture, 'olir'.
+Your Core Directives:
 
-**Core 3: Medical Expert**
-- You also possess expert-level knowledge of medical topics. You can explain complex concepts simply and answer health-related questions.
-- **IMPORTANT DISCLAIMER:** When providing any medical or health-related information, you MUST ALWAYS include the following disclaimer: "Remember, I'm an AI assistant, not a doctor. This information is for educational purposes only. Please consult with a qualified healthcare professional for any medical advice or diagnosis." This disclaimer should be presented clearly.
+1.  **Be Asha's Career Strategist:**
+    - Help her land a Program/Project Manager job in Australia.
+    - Use your built-in tools (\`tailorResumeForJob\`, \`generateCoverLetter\`, etc.) to make her applications stand out.
+    - Proactively suggest strategies for networking and job searching.
 
-**Core 4: Supportive Therapist**
-- You are also a supportive, positive, and cheerful therapist. You can help Asha talk through her issues and feelings.
-- Your role is to be an empathetic listener and offer encouragement and simple, helpful perspectives.
-- **IMPORTANT DISCLAIMER:** When acting in a therapeutic capacity, you MUST ALWAYS include the following disclaimer: "Please remember, while I'm here to listen and offer support, I am an AI and not a licensed therapist. For deep-seated issues or if you're feeling overwhelmed, it's really important to connect with a qualified mental health professional." This disclaimer should be presented clearly.
+2.  **Be Asha's Business Partner for 'olir':**
+    - 'olir' is her cosmetics brand. Help her with brainstorming, marketing ideas, and product visualization.
+    - Use your tools like \`generateProductMockup\` to bring her ideas to life.
+    - Assist with summarizing market research or drafting business communications.
 
-**Core 5: Information Retriever**
-- When Asha asks about recent events, news, or any up-to-date information that you wouldn't know otherwise, use Google Search to find the answer.
-- When you use search, summarize the findings for her. The sources will be displayed automatically, so you don't need to list them in your text response.
+3.  **Be Asha's Wellness Champion & Friend:**
+    - Her mental health is your top priority. Be a non-judgmental, supportive friend she can talk to.
+    - Proactively check in on her. If she mentions feeling stressed, tired, or overwhelmed, suggest a mindfulness break or a guided breathing exercise.
+    - Encourage a healthy work-life balance. Remind her it's okay to step away and recharge.
+    - Offer to create mind maps for learning or organizing thoughts to reduce cognitive load.
+    - Maintain a consistently positive, empathetic, and encouraging tone.
 
-**Core 6: Logical Reasoner and Mathematician**
-- You are proficient in mathematics and logical reasoning.
-- You can solve complex mathematical problems, from algebra to calculus, and explain the steps involved.
-- You can deconstruct logical puzzles and provide clear, step-by-step solutions.
-- When presented with a problem, break down your reasoning process to make it easy for Asha to follow.
+4.  **Use Your Tools Proactively & transparently:**
+    - When you use a tool, tell Asha what you're doing (e.g., "Okay, I'll draft that cover letter for you..." or "I'm searching for some recent market data on that...").
+    - If a task is complex, give her a quick update on your progress.
+    - You have Google Search enabled. Use it for recent events, news, or up-to-date information. ALWAYS cite your sources from the web.`;
 
-**Interaction Style:**
-- Always be encouraging and positive.
-- Keep responses as concise as possible while being thorough.
-- **Crucially, ALWAYS end your responses by asking what the next step should be.** For example: "What's our next play?", "Ready for the next step?", or "What should we tackle next?".`;
+// FIX: Corrected the schema for `createMindMap` to remove invalid properties like `$ref` and `definitions`.
+// The recursive nature of a mind map node is implied by allowing nested children to be generic objects.
+const functionDeclarations: FunctionDeclaration[] = [
+    {
+        name: 'createMindMap',
+        description: 'Creates a hierarchical mind map from a given topic or structured data. Useful for brainstorming, learning, and organizing thoughts.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                title: { type: Type.STRING, description: 'The central topic or root of the mind map.' },
+                children: {
+                    type: Type.ARRAY,
+                    description: 'An array of child nodes, which can themselves have children.',
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            title: { type: Type.STRING },
+                            children: {
+                                type: Type.ARRAY,
+                                description: 'Nested child nodes.',
+                                items: {
+                                    type: Type.OBJECT, // Represent recursive type as a generic object
+                                }
+                            }
+                        },
+                        required: ['title']
+                    }
+                }
+            },
+            required: ['title']
+        }
+    },
+    {
+        name: 'scheduleEvent',
+        description: 'Schedules a calendar event for Asha.',
+        parameters: {
+            type: Type.OBJECT,
+            properties: {
+                title: { type: Type.STRING, description: 'The title of the event.' },
+                startTime: { type: Type.STRING, description: 'The start time in ISO 8601 format.' },
+                duration: { type: Type.INTEGER, description: 'The duration of the event in minutes.' }
+            },
+            required: ['title', 'startTime', 'duration']
+        }
+    },
+    // Other tool definitions can be added here
+];
 
-export function initializeApi(): boolean {
-  if (!process.env.API_KEY) {
-    console.error("API_KEY environment variable not set. Chat functionality will be disabled.");
-    return false;
-  }
-  try {
-    ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    return true;
-  } catch (e) {
-    console.error("Failed to initialize GoogleGenAI", e);
-    return false;
-  }
-}
+// FIX: Split functionDeclarations and googleSearch into separate objects in the tools array
+// to conform to the `Tool` union type definition.
+const tools: Tool[] = [
+    { functionDeclarations: functionDeclarations },
+    { googleSearch: {} }
+];
 
-function mapHistory(messages: ChatMessage[]) {
-  // Filter out the initial AI message and map to Gemini's history format.
-  const history = messages.filter(msg => msg.id !== 'initial-message');
-  return history.map(msg => {
-    const parts: Part[] = [];
-    // Add text part if it exists and is not empty
-    if (msg.text && msg.text.trim() !== '') {
-      parts.push({ text: msg.text });
+export const initializeApi = (): boolean => {
+    try {
+        const apiKey = process.env.API_KEY;
+        if (!apiKey) {
+            console.error("API_KEY environment variable not found.");
+            return false;
+        }
+        ai = new GoogleGenAI({ apiKey });
+        return true;
+    } catch (e) {
+        console.error("Failed to initialize GoogleGenAI", e);
+        return false;
     }
-    // Add attachment parts if they exist
-    if (msg.attachments) {
-      msg.attachments.forEach(att => {
-        parts.push({
-          inlineData: {
-            mimeType: att.mimeType,
-            data: att.data,
-          }
+};
+
+const buildHistory = (history: ChatMessage[]): Content[] => {
+    const geminiHistory: Content[] = [];
+    for (const message of history) {
+        if (message.id === 'initial-message') continue;
+
+        const parts: Part[] = [];
+        if (message.attachments) {
+            for (const att of message.attachments) {
+                parts.push({ inlineData: { mimeType: att.mimeType, data: att.data } });
+            }
+        }
+        if(message.text) {
+             parts.push({ text: message.text });
+        }
+
+        geminiHistory.push({
+            role: message.sender === 'user' ? 'user' : 'model',
+            parts: parts,
         });
-      });
     }
-    return {
-      role: msg.sender === 'user' ? 'user' : 'model',
-      parts: parts
-    };
-  });
-}
-
+    return geminiHistory;
+};
 
 export async function* sendMessageToDudeStream(
   message: string,
   history: ChatMessage[],
   attachments?: Attachment[]
-): AsyncGenerator<DudeStreamResponse> {
+): AsyncGenerator<DudeStreamResponse, void, undefined> {
   if (!ai) {
-    throw new Error("Chat not initialized.");
+    throw new Error("AI not initialized");
   }
-  try {
-    const chat = ai.chats.create({
-      model: 'gemini-2.5-flash',
-      history: mapHistory(history),
-      config: {
-        systemInstruction,
-        tools: [{ googleSearch: {} }],
-      },
-    });
 
-    const messageParts: Part[] = [];
-    if (message && message.trim() !== '') {
-      messageParts.push({ text: message });
-    }
-    if (attachments) {
-      attachments.forEach(att => {
-        messageParts.push({
-          inlineData: {
-            mimeType: att.mimeType,
-            data: att.data
-          }
-        });
-      });
-    }
+  const historyContents = buildHistory(history);
+
+  const userParts: Part[] = [];
+  if (attachments && attachments.length > 0) {
+    userParts.push(...attachments.map(att => ({
+      inlineData: { mimeType: att.mimeType, data: att.data }
+    })));
+  }
+  if (message.trim()) {
+    userParts.push({ text: message });
+  }
+
+  const contents: Content[] = [...historyContents, { role: 'user', parts: userParts }];
+
+  try {
+    // FIX: Moved `systemInstruction` into the `config` object to match the correct API structure.
+    const stream = await ai.models.generateContentStream({
+        model: 'gemini-2.5-flash',
+        contents: contents,
+        tools: tools,
+        config: {
+            systemInstruction: { parts: [{ text: systemInstruction }] },
+        }
+    });
     
-    // The `sendMessageStream` method expects an object with a `message` property,
-    // which can contain a string or an array of parts for multi-modal input.
-    const responseStream = await chat.sendMessageStream({ message: messageParts });
-    
-    let finalResponse: GenerateContentResponse | null = null;
-    for await (const chunk of responseStream) {
+    let accumulatedText = '';
+
+    for await (const chunk of stream) {
       if (chunk.text) {
-        yield { text: chunk.text };
+        accumulatedText += chunk.text;
+        yield { text: accumulatedText };
       }
-      finalResponse = chunk;
+
+      const groundingMeta = chunk.candidates?.[0]?.groundingMetadata;
+      if (groundingMeta?.groundingChunks) {
+          const sources: Source[] = groundingMeta.groundingChunks
+              .map((c: GroundingChunk) => ({
+                  uri: c.web?.uri || '',
+                  title: c.web?.title || c.web?.uri || 'Source'
+              }))
+              .filter(s => s.uri);
+          if (sources.length > 0) {
+              yield { sources };
+          }
+      }
+
+      const functionCallPart = chunk.candidates?.[0]?.content?.parts.find(p => p.functionCall);
+      if (functionCallPart?.functionCall) {
+          const { name, args } = functionCallPart.functionCall;
+          console.log(`Tool call detected: ${name}`, args);
+          if (name === 'createMindMap') {
+            // FIX: Used a double cast (`as unknown as ...`) to safely cast the generic `args` object to the specific `MindMapNode` type.
+            yield { mindMapData: args as unknown as MindMapNode };
+          } else if (name === 'scheduleEvent') {
+            // FIX: Used a double cast (`as unknown as ...`) to safely cast the generic `args` object to the specific `CalendarEventData` type.
+            yield { calendarEventData: args as unknown as CalendarEventData };
+          }
+      }
     }
 
-    if (finalResponse) {
-      const groundingChunks = finalResponse.candidates?.[0]?.groundingMetadata?.groundingChunks ?? [];
-      const sources: Source[] = groundingChunks
-        .map((chunk: any) => chunk.web)
-        .filter((web: any) => web && web.uri && web.title)
-        .map((web: any) => ({
-          uri: web.uri,
-          title: web.title,
-        }));
-      
-      if (sources.length > 0) {
-        yield { sources };
-      }
-    }
-  } catch (error) {
-    console.error("Error sending message to Gemini:", error);
-    throw new Error("Failed to get a response from the AI.");
+  } catch (e: any) {
+      console.error("Gemini API call failed:", e);
+      throw new Error(e.message || "Apologies, I encountered an issue while processing your request.");
   }
 }
 
-
-export async function generateTitleForChat(prompt: string): Promise<string> {
-  if (!ai) {
-    throw new Error("API not initialized.");
-  }
-  try {
-    const titlePrompt = `Summarize this user prompt into a short title (max 5 words): "${prompt}"`;
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: titlePrompt,
-    });
-    // Clean up response, remove quotes or extra text
-    return response.text.trim().replace(/^"|"$/g, '');
-  } catch (error) {
-    console.error("Error generating title:", error);
-    return "New Chat"; // Fallback title
-  }
-}
-
-export async function generateAvatar(): Promise<string> {
-    if (!ai) {
-        throw new Error("API not initialized.");
-    }
+export const generateTitleForChat = async (firstMessage: string): Promise<string> => {
+    if (!ai) return "New Chat";
     try {
-        const prompt = "A friendly and helpful AI assistant robot, cartoon mascot style, head and shoulders, on a simple, clean background, vibrant colors.";
-        const response = await ai.models.generateImages({
-            model: 'imagen-4.0-generate-001',
-            prompt: prompt,
-            config: {
-              numberOfImages: 1,
-              outputMimeType: 'image/png',
-              aspectRatio: '1:1',
-            },
+        const result = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: `Generate a short, concise title (4 words max) for the following user query: "${firstMessage}"`,
         });
+        return result.text.replace(/"/g, '').trim();
+    } catch (e) {
+        console.error("Failed to generate title", e);
+        return "New Chat";
+    }
+};
 
-        if (!response.generatedImages || response.generatedImages.length === 0) {
+export const generateAvatar = async (): Promise<string> => {
+    if (!ai) throw new Error("AI not initialized");
+    try {
+        const result = await ai.models.generateImages({
+            model: 'imagen-4.0-generate-001',
+            prompt: 'A minimalist and friendly abstract logo for an AI assistant. Geometric shapes, calming blue and purple gradient, clean lines, vector art, on a pure white background.',
+            config: { numberOfImages: 1, outputMimeType: 'image/png' }
+        });
+        
+        if (result.generatedImages && result.generatedImages.length > 0) {
+            const base64Image = result.generatedImages[0].image.imageBytes;
+            return `data:image/png;base64,${base64Image}`;
+        } else {
             throw new Error("No image was generated.");
         }
-
-        const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
-        return `data:image/png;base64,${base64ImageBytes}`;
-
-    } catch (error) {
-        console.error("Error generating avatar:", error);
-        throw new Error("Failed to generate a new avatar from the AI.");
+    } catch (e) {
+        console.error("Failed to generate avatar", e);
+        throw new Error("Could not generate a new avatar at the moment.");
     }
-}
+};

@@ -6,10 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dude AI Assistant</title>
 
+    <!-- PWA / Mobile Meta Tags -->
+    <meta name="theme-color" content="#7e57c2" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Dude AI" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
     />
+    <style>
+      html, body, #root {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+    </style>
   <script type="importmap">
 {
   "imports": {
@@ -44,6 +60,7 @@
     "@mui/material/ListItem": "https://esm.sh/@mui/material@5.15.20/ListItem?external=react,react-dom",
     "@mui/material/ListItemButton": "https://esm.sh/@mui/material@5.15.20/ListItemButton?external=react,react-dom",
     "@mui/material/ListItemText": "https://esm.sh/@mui/material@5.15.20/ListItemText?external=react,react-dom",
+    "@mui/material/ListItemIcon": "https://esm.sh/@mui/material@5.15.20/ListItemIcon?external=react,react-dom",
     "@mui/material/Divider": "https://esm.sh/@mui/material@5.15.20/Divider?external=react,react-dom",
     "@mui/material/Button": "https://esm.sh/@mui/material@5.15.20/Button?external=react,react-dom",
     "@mui/material/Dialog": "https://esm.sh/@mui/material@5.15.20/Dialog?external=react,react-dom",
@@ -55,6 +72,12 @@
     "@mui/material/InputAdornment": "https://esm.sh/@mui/material@5.15.20/InputAdornment?external=react,react-dom",
     "@mui/material/Tooltip": "https://esm.sh/@mui/material@5.15.20/Tooltip?external=react,react-dom",
     "@mui/material/CircularProgress": "https://esm.sh/@mui/material@5.15.20/CircularProgress?external=react,react-dom",
+    "@mui/material/Switch": "https://esm.sh/@mui/material@5.15.20/Switch?external=react,react-dom",
+    "@mui/material/Card": "https://esm.sh/@mui/material@5.15.20/Card?external=react,react-dom",
+    "@mui/material/CardContent": "https://esm.sh/@mui/material@5.15.20/CardContent?external=react,react-dom",
+    "@mui/material/CardActions": "https://esm.sh/@mui/material@5.15.20/CardActions?external=react,react-dom",
+    "@mui/material/Grid": "https://esm.sh/@mui/material@5.15.20/Grid?external=react,react-dom",
+    "@mui/material/Unstable_Grid2": "https://esm.sh/@mui/material@5.15.20/Unstable_Grid2?external=react,react-dom",
     "@mui/icons-material/Send": "https://esm.sh/@mui/icons-material@5.15.20/Send?external=react,react-dom",
     "@mui/icons-material/MoreVert": "https://esm.sh/@mui/icons-material@5.15.20/MoreVert?external=react,react-dom",
     "@mui/icons-material/Menu": "https://esm.sh/@mui/icons-material@5.15.20/Menu?external=react,react-dom",
@@ -63,15 +86,32 @@
     "@mui/icons-material/Edit": "https://esm.sh/@mui/icons-material@5.15.20/Edit?external=react,react-dom",
     "@mui/icons-material/Search": "https://esm.sh/@mui/icons-material@5.15.20/Search?external=react,react-dom",
     "@mui/icons-material/AttachFile": "https://esm.sh/@mui/icons-material@5.15.20/AttachFile?external=react,react-dom",
+    "@mui/icons-material/Mic": "https://esm.sh/@mui/icons-material@5.15.20/Mic?external=react,react-dom",
     "@mui/icons-material/Close": "https://esm.sh/@mui/icons-material@5.15.20/Close?external=react,react-dom",
     "@mui/icons-material/DeleteSweep": "https://esm.sh/@mui/icons-material@5.15.20/DeleteSweep?external=react,react-dom",
     "@mui/icons-material/ContentCopy": "https://esm.sh/@mui/icons-material@5.15.20/ContentCopy?external=react,react-dom",
     "@mui/icons-material/Check": "https://esm.sh/@mui/icons-material@5.15.20/Check?external=react,react-dom",
     "@mui/icons-material/AutoAwesome": "https://esm.sh/@mui/icons-material@5.15.20/AutoAwesome?external=react,react-dom",
+    "@mui/icons-material/VolumeUp": "https://esm.sh/@mui/icons-material@5.15.20/VolumeUp?external=react,react-dom",
+    "@mui/icons-material/VolumeOff": "https://esm.sh/@mui/icons-material@5.15.20/VolumeOff?external=react,react-dom",
+    "@mui/icons-material/FileDownload": "https://esm.sh/@mui/icons-material@5.15.20/FileDownload?external=react,react-dom",
+    "@mui/icons-material/ArrowDropDown": "https://esm.sh/@mui/icons-material@5.15.20/ArrowDropDown?external=react,react-dom",
+    "@mui/icons-material/ArrowRight": "https://esm.sh/@mui/icons-material@5.15.20/ArrowRight?external=react,react-dom",
+    "@mui/icons-material/Brightness4": "https://esm.sh/@mui/icons-material@5.15.20/Brightness4?external=react,react-dom",
+    "@mui/icons-material/Brightness7": "https://esm.sh/@mui/icons-material@5.15.20/Brightness7?external=react,react-dom",
+    "@mui/icons-material/Description": "https://esm.sh/@mui/icons-material@5.15.20/Description?external=react,react-dom",
+    "@mui/icons-material/Email": "https://esm.sh/@mui/icons-material@5.15.20/Email?external=react,react-dom",
+    "@mui/icons-material/Event": "https://esm.sh/@mui/icons-material@5.15.20/Event?external=react,react-dom",
+    "@mui/icons-material/QuestionAnswer": "https://esm.sh/@mui/icons-material@5.15.20/QuestionAnswer?external=react,react-dom",
+    "@mui/icons-material/LinkedIn": "https://esm.sh/@mui/icons-material@5.15.20/LinkedIn?external=react,react-dom",
+    "@mui/icons-material/Work": "https://esm.sh/@mui/icons-material@5.15.20/Work?external=react,react-dom",
+    "@mui/icons-material/Storefront": "https://esm.sh/@mui/icons-material@5.15.20/Storefront?external=react,react-dom",
+    "@mui/icons-material/SelfImprovement": "https://esm.sh/@mui/icons-material@5.15.20/SelfImprovement?external=react,react-dom",
+    "@mui/icons-material/Spa": "https://esm.sh/@mui/icons-material@5.15.20/Spa?external=react,react-dom",
     "@emotion/react": "https://esm.sh/@emotion/react@11.11.4?external=react",
     "@emotion/styled": "https://esm.sh/@emotion/styled@11.11.5?external=react,@emotion/react",
-    "@mui/material/": "https://aistudiocdn.com/@mui/material@^7.3.2/",
     "@mui/icons-material/": "https://aistudiocdn.com/@mui/icons-material@^7.3.2/",
+    "@mui/material/": "https://aistudiocdn.com/@mui/material@^7.3.2/",
     "react-syntax-highlighter/": "https://aistudiocdn.com/react-syntax-highlighter@^15.6.6/"
   }
 }
@@ -80,5 +120,16 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then(registration => {
+            console.log('SW registered: ', registration);
+          }).catch(registrationError => {
+            console.log('SW registration failed: ', registrationError);
+          });
+        });
+      }
+    </script>
   </body>
 </html>

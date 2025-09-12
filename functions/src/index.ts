@@ -1,26 +1,31 @@
 
-// FIX: Changed import to use default export and also import Request/Response types to avoid conflicts with global types.
-import express from "express";
-import cors from "cors";
-import path from "path";
+
+// FIX: The default import for 'firebase-functions' resolves to the v2 SDK,
+// but this function uses v1 features (e.g., `functions.config()`, `request.body`).
+// Explicitly import from 'firebase-functions/v1' to use the correct types and runtime.
+import * as functions from "firebase-functions/v1";
+import * as admin from "firebase-admin";
+// FIX: Explicitly import Request and Response from 'express' to ensure
+// the correct types for the v1 onRequest handler, which uses Express-style objects.
+// Removed aliases to resolve potential type conflicts.
+import type { Request, Response } from "express";
 import { GoogleGenAI, Part, Content, Tool, FunctionDeclaration, Type, GroundingChunk } from "@google/genai";
 import { ChatMessage, Attachment, Source, MindMapNode, CalendarEventData } from "./types";
 
-const app = express();
+// Initialize Firebase Admin SDK
+admin.initializeApp();
 
-// --- Middleware ---
-app.use(cors()); // Enable CORS for all origins
-app.use(express.json({ limit: '10mb' })); // Increase limit for file uploads
-
-// --- Gemini AI Setup ---
+// Initialize Gemini AI
+// The API_KEY is set in the Firebase Function's runtime environment variables
+// This is now configured in the Google Cloud Console UI.
 const API_KEY = process.env.GEMINI_API_KEY;
 if (!API_KEY) {
-  console.error("FATAL ERROR: Gemini API Key not found in environment variables.");
+  console.error("FATAL ERROR: Gemini API Key not found in function configuration.");
 }
 const ai = new GoogleGenAI({ apiKey: API_KEY! });
 
 
-// --- AI Configuration (Copied from previous functions/index.ts) ---
+// --- Replicated from Frontend ---
 const systemInstruction = `You are "Dude," a personal AI assistant for Asha.
 Your personality is friendly, encouraging, and action-oriented. You're a super-capable and supportive best friend, always ready to help with a positive attitude.
 
@@ -140,14 +145,48 @@ const buildHistory = (history: ChatMessage[]): Content[] => {
     return geminiHistory;
 };
 
-// --- API Route Handlers ---
+// Main API function to handle all requests
+// FIX: Use express `Request` and `Response` types to ensure correct typing for the handler.
+export const api = functions.https.onRequest(async (request: Request, response: Response) => {
+    // Enable CORS for all origins
+    response.set("Access-Control-Allow-Origin", "*");
+    response.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    response.set("Access-Control-Allow-Headers", "Content-Type");
+    
+    if (request.method === "OPTIONS") {
+        response.status(204).send();
+        return;
+    }
 
-// FIX: Use explicit `express.Request` and `express.Response` types to resolve type ambiguity.
-const handleGenerateContent = async (request: express.Request, response: express.Response): Promise<void> => {
-  if (!API_KEY) {
-    response.status(500).json({ error: "API Key not configured on the server." });
-    return;
-  }
+    if (!API_KEY) {
+        response.status(500).send("API Key not configured.");
+        return;
+    }
+
+    const path = request.path.split("/api/")[1];
+
+    try {
+        switch (path) {
+            case "generateContent":
+                await handleGenerateContent(request, response);
+                break;
+            case "generateTitle":
+                await handleGenerateTitle(request, response);
+                break;
+            case "generateAvatar":
+                await handleGenerateAvatar(request, response);
+                break;
+            default:
+                response.status(404).send("Not Found");
+        }
+    } catch (e: any) {
+        console.error("Error in API handler:", e);
+        response.status(500).json({ error: e.message || "An unexpected error occurred." });
+    }
+});
+
+// FIX: Use express `Request` and `Response` types to ensure correct typing.
+const handleGenerateContent = async (request: Request, response: Response) => {
   const { message, history, attachments } = request.body;
   
   response.setHeader("Content-Type", "application/json");
@@ -219,12 +258,8 @@ const handleGenerateContent = async (request: express.Request, response: express
   }
 };
 
-// FIX: Use explicit `express.Request` and `express.Response` types to resolve type ambiguity.
-const handleGenerateTitle = async (request: express.Request, response: express.Response): Promise<void> => {
-    if (!API_KEY) {
-        response.status(500).json({ error: "API Key not configured on the server." });
-        return;
-    }
+// FIX: Use express `Request` and `Response` types to ensure correct typing.
+const handleGenerateTitle = async (request: Request, response: Response) => {
     const { message } = request.body;
     if (!message) {
         response.status(400).json({ error: "message is required" });
@@ -235,6 +270,7 @@ const handleGenerateTitle = async (request: express.Request, response: express.R
             model: 'gemini-2.5-flash',
             contents: `Generate a short, concise title (4 words max) for the following user query: "${message}"`,
         });
+        // FIX: Add optional chaining and a fallback to prevent runtime errors if `result.text` is undefined.
         const title = result.text?.replace(/"/g, '').trim() || "New Chat";
         response.json({ title });
     } catch(e) {
@@ -243,12 +279,8 @@ const handleGenerateTitle = async (request: express.Request, response: express.R
     }
 };
 
-// FIX: Use explicit `express.Request` and `express.Response` types to resolve type ambiguity.
-const handleGenerateAvatar = async (request: express.Request, response: express.Response): Promise<void> => {
-    if (!API_KEY) {
-        response.status(500).json({ error: "API Key not configured on the server." });
-        return;
-    }
+// FIX: Use express `Request` and `Response` types to ensure correct typing.
+const handleGenerateAvatar = async (request: Request, response: Response) => {
     try {
         const result = await ai.models.generateImages({
             model: 'imagen-4.0-generate-001',
@@ -256,6 +288,7 @@ const handleGenerateAvatar = async (request: express.Request, response: express.
             config: { numberOfImages: 1, outputMimeType: 'image/png' }
         });
         
+        // FIX: Add optional chaining to safely access nested properties.
         const base64Image = result.generatedImages?.[0]?.image?.imageBytes;
         if (base64Image) {
             response.json({ imageDataUrl: `data:image/png;base64,${base64Image}` });
@@ -267,29 +300,3 @@ const handleGenerateAvatar = async (request: express.Request, response: express.
         response.status(500).json({ error: "Could not generate a new avatar at the moment." });
     }
 };
-
-// --- API Routes Setup ---
-app.post("/api/generateContent", handleGenerateContent);
-app.post("/api/generateTitle", handleGenerateTitle);
-app.post("/api/generateAvatar", handleGenerateAvatar);
-
-// --- Static File Serving ---
-const staticDir = path.resolve(__dirname, '..', '..');
-app.use(express.static(staticDir));
-
-// Fallback to index.html for client-side routing
-// FIX: Use explicit `express.Request` and `express.Response` types to resolve type ambiguity.
-app.get('*', (req: express.Request, res: express.Response) => {
-    // If it's not an API call, serve the main html file.
-    if (!req.path.startsWith('/api/')) {
-        res.sendFile(path.join(staticDir, 'index.html'));
-    } else {
-        res.status(404).send('API endpoint not found.');
-    }
-});
-
-// --- Start Server ---
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
-});

@@ -11,6 +11,7 @@
     "minimal-ui"
   ],
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#f4f6f8",
   "theme_color": "#7e57c2",
   "icons": [

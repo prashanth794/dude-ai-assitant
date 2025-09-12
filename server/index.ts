@@ -4,8 +4,8 @@
 
 
 
-// FIX: Changed import to use default export and also import Request/Response types to avoid conflicts with global types.
-import express, { Request, Response } from "express";
+// FIX: Use default export for express and alias Request/Response types to avoid conflicts with global types.
+import express, { Request as ExpressRequest, Response as ExpressResponse } from "express";
 import cors from "cors";
 import path from "path";
 import { GoogleGenAI, Part, Content, Tool, FunctionDeclaration, Type, GroundingChunk } from "@google/genai";
@@ -147,8 +147,8 @@ const buildHistory = (history: ChatMessage[]): Content[] => {
 
 // --- API Route Handlers ---
 
-// FIX: Use explicit `Request` and `Response` types from express.
-const handleGenerateContent = async (request: Request, response: Response) => {
+// FIX: Use aliased ExpressRequest and ExpressResponse types from express.
+const handleGenerateContent = async (request: ExpressRequest, response: ExpressResponse) => {
   if (!API_KEY) {
     return response.status(500).json({ error: "API Key not configured on the server." });
   }
@@ -223,8 +223,8 @@ const handleGenerateContent = async (request: Request, response: Response) => {
   }
 };
 
-// FIX: Use explicit `Request` and `Response` types from express.
-const handleGenerateTitle = async (request: Request, response: Response) => {
+// FIX: Use aliased ExpressRequest and ExpressResponse types from express.
+const handleGenerateTitle = async (request: ExpressRequest, response: ExpressResponse) => {
     if (!API_KEY) {
         return response.status(500).json({ error: "API Key not configured on the server." });
     }
@@ -244,8 +244,8 @@ const handleGenerateTitle = async (request: Request, response: Response) => {
     }
 };
 
-// FIX: Use explicit `Request` and `Response` types from express.
-const handleGenerateAvatar = async (request: Request, response: Response) => {
+// FIX: Use aliased ExpressRequest and ExpressResponse types from express.
+const handleGenerateAvatar = async (request: ExpressRequest, response: ExpressResponse) => {
     if (!API_KEY) {
         return response.status(500).json({ error: "API Key not configured on the server." });
     }
@@ -278,8 +278,8 @@ const staticDir = path.resolve(__dirname, '..', '..');
 app.use(express.static(staticDir));
 
 // Fallback to index.html for client-side routing
-// FIX: Use explicit `Request` and `Response` types from express.
-app.get('*', (req: Request, res: Response) => {
+// FIX: Use aliased ExpressRequest and ExpressResponse types from express.
+app.get('*', (req: ExpressRequest, res: ExpressResponse) => {
     // If it's not an API call, serve the main html file.
     if (!req.path.startsWith('/api/')) {
         res.sendFile(path.join(staticDir, 'index.html'));

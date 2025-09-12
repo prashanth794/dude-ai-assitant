@@ -1,24 +1,12 @@
 
 {
-  "hosting": {
-    "public": ".",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
+  "apphosting": {
+    "source": ".",
+    "runCommand": "npm start",
+    "requiredServices": [
       {
-        "source": "/api/**",
-        "function": "api"
-      },
-      {
-        "source": "**",
-        "destination": "/index.html"
+        "service": "run.googleapis.com"
       }
     ]
-  },
-  "functions": {
-    "source": "functions"
   }
 }

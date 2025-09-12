@@ -17,8 +17,11 @@
     "react-syntax-highlighter": "^15.6.6",
     "@emotion/react": "11.11.4",
     "@emotion/styled": "11.11.5",
+    "firebase-functions": "^6.4.0",
+    "@mui/material": "^7.3.2",
+    "firebase-admin": "^13.5.0",
     "@mui/icons-material": "^7.3.2",
-    "@mui/material": "^7.3.2"
+    "express": "^5.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

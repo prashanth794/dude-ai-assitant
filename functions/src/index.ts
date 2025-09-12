@@ -1,14 +1,16 @@
 
 
 
+
+
 // FIX: The default import for 'firebase-functions' resolves to the v2 SDK,
 // but this function uses v1 features (e.g., `functions.config()`, `request.body`).
 // Explicitly import from 'firebase-functions/v1' to use the correct types and runtime.
 import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
-// FIX: Explicitly import Request and Response from 'express' to avoid conflicts with global types and ensure
+// FIX: Explicitly import Request and Response from 'express' to ensure
 // the correct types for the v1 onRequest handler, which uses Express-style objects.
-// This was causing type conflicts. Removed direct import from 'express'.
+import type { Request, Response } from "express";
 import { GoogleGenAI, Part, Content, Tool, FunctionDeclaration, Type, GroundingChunk } from "@google/genai";
 import { ChatMessage, Attachment, Source, MindMapNode, CalendarEventData } from "./types";
 
@@ -146,8 +148,8 @@ const buildHistory = (history: ChatMessage[]): Content[] => {
 };
 
 // Main API function to handle all requests
-// FIX: Use `functions.https.Request` and `functions.Response` to ensure correct typing and avoid conflicts.
-export const api = functions.https.onRequest(async (request: functions.https.Request, response: functions.Response) => {
+// FIX: Use express `Request` and `Response` types to ensure correct typing for the handler.
+export const api = functions.https.onRequest(async (request: Request, response: Response) => {
     // Enable CORS for all origins
     response.set("Access-Control-Allow-Origin", "*");
     response.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -185,8 +187,8 @@ export const api = functions.https.onRequest(async (request: functions.https.Req
     }
 });
 
-// FIX: Use `functions.https.Request` and `functions.Response` to ensure correct typing.
-const handleGenerateContent = async (request: functions.https.Request, response: functions.Response) => {
+// FIX: Use express `Request` and `Response` types to ensure correct typing.
+const handleGenerateContent = async (request: Request, response: Response) => {
   const { message, history, attachments } = request.body;
   
   response.setHeader("Content-Type", "application/json");
@@ -258,8 +260,8 @@ const handleGenerateContent = async (request: functions.https.Request, response:
   }
 };
 
-// FIX: Use `functions.https.Request` and `functions.Response` to ensure correct typing.
-const handleGenerateTitle = async (request: functions.https.Request, response: functions.Response) => {
+// FIX: Use express `Request` and `Response` types to ensure correct typing.
+const handleGenerateTitle = async (request: Request, response: Response) => {
     const { message } = request.body;
     if (!message) {
         response.status(400).json({ error: "message is required" });
@@ -277,8 +279,8 @@ const handleGenerateTitle = async (request: functions.https.Request, response: f
     }
 };
 
-// FIX: Use `functions.https.Request` and `functions.Response` to ensure correct typing.
-const handleGenerateAvatar = async (request: functions.https.Request, response: functions.Response) => {
+// FIX: Use express `Request` and `Response` types to ensure correct typing.
+const handleGenerateAvatar = async (request: Request, response: Response) => {
     try {
         const result = await ai.models.generateImages({
             model: 'imagen-4.0-generate-001',

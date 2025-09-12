@@ -3,9 +3,10 @@
 // Explicitly import from 'firebase-functions/v1' to use the correct types and runtime.
 import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
-// FIX: The request object for a v1 onRequest function is functions.https.Request.
-// The Response object is from Express.
-import { Response } from "express";
+// FIX: Explicitly import Request and Response from 'express' to ensure correct
+// types for the v1 onRequest handler, which uses Express-style objects. This
+// avoids type conflicts with other 'Request' or 'Response' types.
+import { Request, Response } from "express";
 import { GoogleGenAI, Part, Content, Tool, FunctionDeclaration, Type, GroundingChunk } from "@google/genai";
 import { ChatMessage, Attachment, Source, MindMapNode, CalendarEventData } from "./types";
 
@@ -14,8 +15,8 @@ admin.initializeApp();
 
 // Initialize Gemini AI
 // The API_KEY is set in the Firebase Function's runtime environment variables
-// `firebase functions:config:set gemini.key="YOUR_API_KEY"`
-const API_KEY = functions.config().gemini.key;
+// This is now configured in the Google Cloud Console UI.
+const API_KEY = process.env.GEMINI_API_KEY;
 if (!API_KEY) {
   console.error("FATAL ERROR: Gemini API Key not found in function configuration.");
 }
@@ -143,8 +144,9 @@ const buildHistory = (history: ChatMessage[]): Content[] => {
 };
 
 // Main API function to handle all requests
-// FIX: Use functions.https.Request for the request parameter type.
-export const api = functions.https.onRequest(async (request: functions.https.Request, response: Response) => {
+// FIX: Use Request from 'express' for the request parameter type to ensure
+// it has the expected properties like .body, .path, and .method.
+export const api = functions.https.onRequest(async (request: Request, response: Response) => {
     // Enable CORS for all origins
     response.set("Access-Control-Allow-Origin", "*");
     response.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -182,8 +184,8 @@ export const api = functions.https.onRequest(async (request: functions.https.Req
     }
 });
 
-// FIX: Use functions.https.Request for the request parameter type.
-const handleGenerateContent = async (request: functions.https.Request, response: Response) => {
+// FIX: Use Request from 'express' for the request parameter type.
+const handleGenerateContent = async (request: Request, response: Response) => {
   const { message, history, attachments } = request.body;
   
   response.setHeader("Content-Type", "application/json");
@@ -255,8 +257,8 @@ const handleGenerateContent = async (request: functions.https.Request, response:
   }
 };
 
-// FIX: Use functions.https.Request for the request parameter type.
-const handleGenerateTitle = async (request: functions.https.Request, response: Response) => {
+// FIX: Use Request from 'express' for the request parameter type.
+const handleGenerateTitle = async (request: Request, response: Response) => {
     const { message } = request.body;
     if (!message) {
         response.status(400).json({ error: "message is required" });
@@ -274,8 +276,8 @@ const handleGenerateTitle = async (request: functions.https.Request, response: R
     }
 };
 
-// FIX: Use functions.https.Request for the request parameter type.
-const handleGenerateAvatar = async (request: functions.https.Request, response: Response) => {
+// FIX: Use Request from 'express' for the request parameter type.
+const handleGenerateAvatar = async (request: Request, response: Response) => {
     try {
         const result = await ai.models.generateImages({
             model: 'imagen-4.0-generate-001',
